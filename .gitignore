@@ -1,0 +1,5 @@
+**/.DS_Store
+bin/
+.vscode/
+pkg/cmd/**/*_bin
+pkg/goa*/
