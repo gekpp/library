@@ -43,7 +43,8 @@ paths:
         in: path
         description: id of the Book
         required: true
-        type: string
+        type: integer
+        format: int64
       - name: Authorization
         in: header
         description: JWT used for authentication
@@ -55,7 +56,7 @@ paths:
         schema:
           $ref: '#/definitions/BooksPickupRequestBody'
           required:
-          - user_id
+          - subscriber_id
       responses:
         "200":
           description: OK response.
@@ -79,12 +80,20 @@ paths:
         in: path
         description: id of the Book
         required: true
-        type: string
+        type: integer
+        format: int64
       - name: Authorization
         in: header
         description: JWT used for authentication
         required: true
         type: string
+      - name: ReserveRequestBody
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/BooksReserveRequestBody'
+          required:
+          - subscriber_id
       responses:
         "200":
           description: OK response.
@@ -93,7 +102,7 @@ paths:
       - http
       security:
       - jwt_header_Authorization: []
-  /books/return/{book_id}:
+  /books/return:
     post:
       tags:
       - books
@@ -105,11 +114,6 @@ paths:
           * `books:return`
       operationId: books#return
       parameters:
-      - name: book_id
-        in: path
-        description: id of the Book
-        required: true
-        type: string
       - name: Authorization
         in: header
         description: JWT used for authentication
@@ -121,7 +125,8 @@ paths:
         schema:
           $ref: '#/definitions/BooksReturnRequestBody'
           required:
-          - user_id
+          - book_id
+          - subscriber_id
       responses:
         "200":
           description: OK response.
@@ -150,7 +155,8 @@ paths:
         in: path
         description: id of the Book
         required: true
-        type: string
+        type: integer
+        format: int64
       - name: Authorization
         in: header
         description: JWT used for authentication
@@ -213,49 +219,55 @@ definitions:
     title: AutherSigninUnauthorizedResponseBody
     type: string
     description: Credentials are invalid
-    example: Delectus voluptatem tenetur eveniet earum.
+    example: Accusamus ut corrupti voluptatem voluptatem.
   BookResponseBody:
     title: BookResponseBody
     type: object
     properties:
       annotation:
         type: string
-        example: Itaque sunt odit repellendus rerum alias distinctio.
+        example: Est aut minus et enim odio.
       author:
         type: string
-        example: Occaecati sequi veniam.
+        example: Ut consequatur quia consequatur et sed.
       id:
-        type: string
-        example: Et error officiis.
+        type: integer
+        example: 6639163768559936509
+        format: int64
       images:
         type: array
         items:
           type: string
-          example: Omnis voluptate velit ratione sint voluptatibus quos.
+          example: Doloribus iste accusantium quo aliquam sit.
         description: images are a list of book photos
         example:
-        - Nihil fugit minima cupiditate consequatur non cupiditate.
-        - Architecto aut qui quis distinctio labore optio.
+        - Consequatur fuga voluptatibus alias et fugit aut.
+        - Quas et.
+        - Veritatis delectus voluptatem tenetur eveniet earum voluptatem.
+      status:
+        type: string
+        example: Error officiis et.
       title:
         type: string
-        example: Minima dolorum.
+        example: Et quasi et qui et deleniti.
     description: Book is a book
     example:
-      annotation: Qui aut doloribus expedita autem quis iusto.
-      author: Sit corrupti saepe laudantium qui eligendi.
-      id: Dignissimos sed.
+      annotation: Repellendus rerum alias distinctio.
+      author: Occaecati sequi veniam.
+      id: 3754138419164672964
       images:
-      - Est sed blanditiis et.
-      - Neque voluptas sequi soluta consequatur.
-      - Error ut quis hic et dicta.
-      - Eum laborum dolore exercitationem ex odit.
-      title: Non id rem libero a sunt.
+      - Voluptate velit ratione sint.
+      - Quos praesentium sed nihil fugit minima.
+      - Consequatur non cupiditate consectetur architecto aut.
+      status: Quis distinctio labore optio incidunt.
+      title: Quas itaque sunt.
     required:
     - id
     - title
     - annotation
     - author
     - images
+    - status
   BooksListResponseBody:
     title: 'Mediatype identifier: application/library.books; view=default'
     type: object
@@ -265,101 +277,104 @@ definitions:
         items:
           $ref: '#/definitions/BookResponseBody'
         example:
-        - annotation: Harum eaque cum quia eos repellendus itaque.
-          author: Quam rerum enim quibusdam.
-          id: Dolor labore.
+        - annotation: Magni et veniam est quibusdam rerum.
+          author: Dolor labore.
+          id: 6236022153690076209
           images:
-          - Hic quia omnis in rem non assumenda.
-          - Sapiente nesciunt.
-          title: Adipisci exercitationem exercitationem.
-        - annotation: Harum eaque cum quia eos repellendus itaque.
-          author: Quam rerum enim quibusdam.
-          id: Dolor labore.
+          - Exercitationem exercitationem.
+          - Harum eaque cum quia eos repellendus itaque.
+          status: Quam rerum enim quibusdam.
+          title: Saepe sunt est dolor accusantium expedita commodi.
+        - annotation: Magni et veniam est quibusdam rerum.
+          author: Dolor labore.
+          id: 6236022153690076209
           images:
-          - Hic quia omnis in rem non assumenda.
-          - Sapiente nesciunt.
-          title: Adipisci exercitationem exercitationem.
-        - annotation: Harum eaque cum quia eos repellendus itaque.
-          author: Quam rerum enim quibusdam.
-          id: Dolor labore.
-          images:
-          - Hic quia omnis in rem non assumenda.
-          - Sapiente nesciunt.
-          title: Adipisci exercitationem exercitationem.
-        - annotation: Harum eaque cum quia eos repellendus itaque.
-          author: Quam rerum enim quibusdam.
-          id: Dolor labore.
-          images:
-          - Hic quia omnis in rem non assumenda.
-          - Sapiente nesciunt.
-          title: Adipisci exercitationem exercitationem.
+          - Exercitationem exercitationem.
+          - Harum eaque cum quia eos repellendus itaque.
+          status: Quam rerum enim quibusdam.
+          title: Saepe sunt est dolor accusantium expedita commodi.
     description: ListResponseBody result type (default view)
     example:
       data:
-      - annotation: Harum eaque cum quia eos repellendus itaque.
-        author: Quam rerum enim quibusdam.
-        id: Dolor labore.
+      - annotation: Magni et veniam est quibusdam rerum.
+        author: Dolor labore.
+        id: 6236022153690076209
         images:
-        - Hic quia omnis in rem non assumenda.
-        - Sapiente nesciunt.
-        title: Adipisci exercitationem exercitationem.
-      - annotation: Harum eaque cum quia eos repellendus itaque.
-        author: Quam rerum enim quibusdam.
-        id: Dolor labore.
+        - Exercitationem exercitationem.
+        - Harum eaque cum quia eos repellendus itaque.
+        status: Quam rerum enim quibusdam.
+        title: Saepe sunt est dolor accusantium expedita commodi.
+      - annotation: Magni et veniam est quibusdam rerum.
+        author: Dolor labore.
+        id: 6236022153690076209
         images:
-        - Hic quia omnis in rem non assumenda.
-        - Sapiente nesciunt.
-        title: Adipisci exercitationem exercitationem.
-      - annotation: Harum eaque cum quia eos repellendus itaque.
-        author: Quam rerum enim quibusdam.
-        id: Dolor labore.
+        - Exercitationem exercitationem.
+        - Harum eaque cum quia eos repellendus itaque.
+        status: Quam rerum enim quibusdam.
+        title: Saepe sunt est dolor accusantium expedita commodi.
+      - annotation: Magni et veniam est quibusdam rerum.
+        author: Dolor labore.
+        id: 6236022153690076209
         images:
-        - Hic quia omnis in rem non assumenda.
-        - Sapiente nesciunt.
-        title: Adipisci exercitationem exercitationem.
-      - annotation: Harum eaque cum quia eos repellendus itaque.
-        author: Quam rerum enim quibusdam.
-        id: Dolor labore.
-        images:
-        - Hic quia omnis in rem non assumenda.
-        - Sapiente nesciunt.
-        title: Adipisci exercitationem exercitationem.
+        - Exercitationem exercitationem.
+        - Harum eaque cum quia eos repellendus itaque.
+        status: Quam rerum enim quibusdam.
+        title: Saepe sunt est dolor accusantium expedita commodi.
     required:
     - data
   BooksPickupRequestBody:
     title: BooksPickupRequestBody
     type: object
     properties:
-      user_id:
+      subscriber_id:
         type: string
-        description: id of the user picking up the book
-        example: Est sit et perferendis hic eos aperiam.
+        description: id of a subscriber picking up the book
+        example: Sit corrupti saepe laudantium qui eligendi.
     example:
-      user_id: Consequatur voluptatem illo tempora quo voluptas occaecati.
+      subscriber_id: Fuga est sed blanditiis et.
     required:
-    - user_id
+    - subscriber_id
+  BooksReserveRequestBody:
+    title: BooksReserveRequestBody
+    type: object
+    properties:
+      subscriber_id:
+        type: string
+        description: id of a subscriber picking up the book
+        example: Non id rem libero a sunt.
+    example:
+      subscriber_id: Qui aut doloribus expedita autem quis iusto.
+    required:
+    - subscriber_id
   BooksReturnInvalidScopesResponseBody:
     title: BooksReturnInvalidScopesResponseBody
     type: string
     description: Token scopes are invalid
-    example: Nulla consequuntur delectus atque non.
+    example: Neque voluptas sequi soluta consequatur.
   BooksReturnRequestBody:
     title: BooksReturnRequestBody
     type: object
     properties:
-      user_id:
+      book_id:
+        type: integer
+        description: id of the Book
+        example: 1588809184003176921
+        format: int64
+      subscriber_id:
         type: string
-        description: id of the user returning the book
-        example: Totam culpa dolore culpa in qui.
+        description: id of a subscriber returning the book
+        example: Ut quis hic et dicta et eum.
     example:
-      user_id: Officia exercitationem.
+      book_id: 7548870960549249963
+      subscriber_id: Exercitationem ex odit.
     required:
-    - user_id
+    - book_id
+    - subscriber_id
   BooksSubscribeInvalidScopesResponseBody:
     title: BooksSubscribeInvalidScopesResponseBody
     type: string
     description: Token scopes are invalid
-    example: Omnis eos.
+    example: Est ut est sit et perferendis.
 securityDefinitions:
   basic_header_Authorization:
     type: basic

@@ -80,7 +80,7 @@ func DecodeListResponse(decoder func(*http.Response) goahttp.Decoder, restoreBod
 // set to call the "books" service "reserve" endpoint
 func (c *Client) BuildReserveRequest(ctx context.Context, v interface{}) (*http.Request, error) {
 	var (
-		bookID string
+		bookID int64
 	)
 	{
 		p, ok := v.(*books.ReservePayload)
@@ -110,6 +110,10 @@ func EncodeReserveRequest(encoder func(*http.Request) goahttp.Encoder) func(*htt
 			return goahttp.ErrInvalidType("books", "reserve", "*books.ReservePayload", v)
 		}
 		req.Header.Set("Authorization", p.Token)
+		body := NewReserveRequestBody(p)
+		if err := encoder(req).Encode(&body); err != nil {
+			return goahttp.ErrEncodingError("books", "reserve", err)
+		}
 		return nil
 	}
 }
@@ -153,7 +157,7 @@ func DecodeReserveResponse(decoder func(*http.Response) goahttp.Decoder, restore
 // set to call the "books" service "pickup" endpoint
 func (c *Client) BuildPickupRequest(ctx context.Context, v interface{}) (*http.Request, error) {
 	var (
-		bookID string
+		bookID int64
 	)
 	{
 		p, ok := v.(*books.PickupPayload)
@@ -229,17 +233,7 @@ func DecodePickupResponse(decoder func(*http.Response) goahttp.Decoder, restoreB
 // BuildReturnRequest instantiates a HTTP request object with method and path
 // set to call the "books" service "return" endpoint
 func (c *Client) BuildReturnRequest(ctx context.Context, v interface{}) (*http.Request, error) {
-	var (
-		bookID string
-	)
-	{
-		p, ok := v.(*books.ReturnPayload)
-		if !ok {
-			return nil, goahttp.ErrInvalidType("books", "return", "*books.ReturnPayload", v)
-		}
-		bookID = p.BookID
-	}
-	u := &url.URL{Scheme: c.scheme, Host: c.host, Path: ReturnBooksPath(bookID)}
+	u := &url.URL{Scheme: c.scheme, Host: c.host, Path: ReturnBooksPath()}
 	req, err := http.NewRequest("POST", u.String(), nil)
 	if err != nil {
 		return nil, goahttp.ErrInvalidURL("books", "return", u.String(), err)
@@ -320,7 +314,7 @@ func DecodeReturnResponse(decoder func(*http.Response) goahttp.Decoder, restoreB
 // path set to call the "books" service "subscribe" endpoint
 func (c *Client) BuildSubscribeRequest(ctx context.Context, v interface{}) (*http.Request, error) {
 	var (
-		bookID string
+		bookID int64
 	)
 	{
 		p, ok := v.(*books.SubscribePayload)
@@ -410,6 +404,7 @@ func unmarshalBookResponseBodyToBooksviewsBookView(v *BookResponseBody) *booksvi
 		Title:      v.Title,
 		Annotation: v.Annotation,
 		Author:     v.Author,
+		Status:     v.Status,
 	}
 	res.Images = make([]string, len(v.Images))
 	for i, val := range v.Images {

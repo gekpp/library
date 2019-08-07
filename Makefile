@@ -1,7 +1,7 @@
 POSTGRES_TAG=11
-POSTGRES_PASSWORD=library
-POSTGRES_USER=librarian
-POSTGRES_DB=library
+POSTGRES_PASSWORD=postgres
+POSTGRES_USER=postgres
+POSTGRES_DB=postgres
 
 .PHONY: postgres clean-postgres
 
@@ -15,24 +15,24 @@ example:
 
 build:
 	cd pkg && \
+	  go test -timeout 30s library && \
 	  go build -o ../bin/books ./cmd/books && \
 	  go build -o ../bin/books-cli ./cmd/books-cli
 	
 run:
-	bin/books -debug
-		# ./books -dbHost 127.0.0.1 -dbUser ${POSTGRES_USER} -dbPassword ${POSTGRES_PASSWORD} -dbName ${POSTGRES_DB}
+	bin/books -debug -dbhost 127.0.0.1 -dbuser ${POSTGRES_USER} -dbpassword ${POSTGRES_PASSWORD} -dbname ${POSTGRES_DB}
 
 
-postgres: if-postgres-not-running
+postgres: if-postgres-not-exists
 	docker run --name library-postgres \
 		-e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
 		-e POSTGRES_USER=${POSTGRES_USER} \
 		-e POSTGRES_DB=${POSTGRES_DB} \
 		-v `pwd`/migrations:/docker-entrypoint-initdb.d \
-		-p 55432:5432 \
+		-p 5432:5432 \
 		-d postgres:${POSTGRES_TAG}
 
-if-postgres-not-running:
+if-postgres-not-exists:
 	! (docker ps -a --format "{{.Names}}" | grep 'library-postgres') 
 
 clean-postgres:

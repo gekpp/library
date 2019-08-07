@@ -28,7 +28,7 @@ func (s *authersrvc) Signin(ctx context.Context, p *auther.SigninPayload) (res *
 			"nbf":    time.Date(2015, 10, 10, 12, 0, 0, 0, time.UTC).Unix(),
 			"iat":    time.Now().Unix(),
 			"scopes": []string{"books:list", "books:reserve", "books:pickup", "books:return", "books:subscribe"},
-			"sub":    p.Username,
+			"sub":    HardcodedUserID,
 		})
 
 	s.logger.Printf("user '%s' signed in", p.Username)

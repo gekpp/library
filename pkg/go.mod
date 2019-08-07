@@ -9,17 +9,23 @@ require (
 	github.com/go-openapi/loads v0.19.2 // indirect
 	github.com/go-openapi/strfmt v0.19.2 // indirect
 	github.com/go-openapi/swag v0.19.4 // indirect
+	github.com/goadesign/goa v2.0.3+incompatible // indirect
 	github.com/google/pprof v0.0.0-20190723021845-34ac40c74b70 // indirect
+	github.com/google/uuid v1.1.1
 	github.com/gopherjs/gopherjs v0.0.0-20190430165422-3e4dfb77656c // indirect
+	github.com/harboe/goa v0.0.0-20151123054011-655ad1f522b5
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
+	github.com/jmoiron/sqlx v1.2.0
+	github.com/julienschmidt/httprouter v1.2.0 // indirect
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/lib/pq v1.2.0
 	github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e // indirect
+	github.com/raphael/goa v2.0.3+incompatible // indirect
 	github.com/smartystreets/assertions v1.0.1 // indirect
 	github.com/smartystreets/goconvey v0.0.0-20190710185942-9d28bd7c0945 // indirect
 	go.mongodb.org/mongo-driver v1.0.4 // indirect
-	goa.design/goa v2.0.3+incompatible
 	goa.design/goa/v3 v3.0.3
+	goa.design/plugins/v3 v3.0.1
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4 // indirect
 	golang.org/x/exp v0.0.0-20190718202018-cfdd5522f6f6 // indirect
 	golang.org/x/image v0.0.0-20190729225735-1bd0cf576493 // indirect

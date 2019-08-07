@@ -57,7 +57,9 @@ type ReservePayload struct {
 	// JWT used for authentication
 	Token string
 	// id of the Book
-	BookID string
+	BookID int64
+	// id of a subscriber picking up the book
+	SubscriberID string
 }
 
 // PickupPayload is the payload type of the books service pickup method.
@@ -65,9 +67,9 @@ type PickupPayload struct {
 	// JWT used for authentication
 	Token string
 	// id of the Book
-	BookID string
-	// id of the user picking up the book
-	UserID string
+	BookID int64
+	// id of a subscriber picking up the book
+	SubscriberID string
 }
 
 // ReturnPayload is the payload type of the books service return method.
@@ -75,9 +77,9 @@ type ReturnPayload struct {
 	// JWT used for authentication
 	Token string
 	// id of the Book
-	BookID string
-	// id of the user returning the book
-	UserID string
+	BookID int64
+	// id of a subscriber returning the book
+	SubscriberID string
 }
 
 // SubscribePayload is the payload type of the books service subscribe method.
@@ -85,17 +87,18 @@ type SubscribePayload struct {
 	// JWT used for authentication
 	Token string
 	// id of the Book
-	BookID string
+	BookID int64
 }
 
 // Book is a book
 type Book struct {
-	ID         string
+	ID         int64
 	Title      string
 	Annotation string
 	Author     string
 	// images are a list of book photos
 	Images []string
+	Status string
 }
 
 // Token scopes are invalid
@@ -171,6 +174,7 @@ func transformBooksviewsBookViewToBook(v *booksviews.BookView) *Book {
 		Title:      *v.Title,
 		Annotation: *v.Annotation,
 		Author:     *v.Author,
+		Status:     *v.Status,
 	}
 	if v.Images != nil {
 		res.Images = make([]string, len(v.Images))
@@ -190,6 +194,7 @@ func transformBookToBooksviewsBookView(v *Book) *booksviews.BookView {
 		Title:      &v.Title,
 		Annotation: &v.Annotation,
 		Author:     &v.Author,
+		Status:     &v.Status,
 	}
 	if v.Images != nil {
 		res.Images = make([]string, len(v.Images))

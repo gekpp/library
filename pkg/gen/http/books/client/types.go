@@ -14,18 +14,27 @@ import (
 	goa "goa.design/goa/v3/pkg"
 )
 
+// ReserveRequestBody is the type of the "books" service "reserve" endpoint
+// HTTP request body.
+type ReserveRequestBody struct {
+	// id of a subscriber picking up the book
+	SubscriberID string `form:"subscriber_id" json:"subscriber_id" xml:"subscriber_id"`
+}
+
 // PickupRequestBody is the type of the "books" service "pickup" endpoint HTTP
 // request body.
 type PickupRequestBody struct {
-	// id of the user picking up the book
-	UserID string `form:"user_id" json:"user_id" xml:"user_id"`
+	// id of a subscriber picking up the book
+	SubscriberID string `form:"subscriber_id" json:"subscriber_id" xml:"subscriber_id"`
 }
 
 // ReturnRequestBody is the type of the "books" service "return" endpoint HTTP
 // request body.
 type ReturnRequestBody struct {
-	// id of the user returning the book
-	UserID string `form:"user_id" json:"user_id" xml:"user_id"`
+	// id of the Book
+	BookID int64 `form:"book_id" json:"book_id" xml:"book_id"`
+	// id of a subscriber returning the book
+	SubscriberID string `form:"subscriber_id" json:"subscriber_id" xml:"subscriber_id"`
 }
 
 // ListResponseBody is the type of the "books" service "list" endpoint HTTP
@@ -44,19 +53,29 @@ type SubscribeInvalidScopesResponseBody string
 
 // BookResponseBody is used to define fields on response body types.
 type BookResponseBody struct {
-	ID         *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	ID         *int64  `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
 	Title      *string `form:"title,omitempty" json:"title,omitempty" xml:"title,omitempty"`
 	Annotation *string `form:"annotation,omitempty" json:"annotation,omitempty" xml:"annotation,omitempty"`
 	Author     *string `form:"author,omitempty" json:"author,omitempty" xml:"author,omitempty"`
 	// images are a list of book photos
 	Images []string `form:"images,omitempty" json:"images,omitempty" xml:"images,omitempty"`
+	Status *string  `form:"status,omitempty" json:"status,omitempty" xml:"status,omitempty"`
+}
+
+// NewReserveRequestBody builds the HTTP request body from the payload of the
+// "reserve" endpoint of the "books" service.
+func NewReserveRequestBody(p *books.ReservePayload) *ReserveRequestBody {
+	body := &ReserveRequestBody{
+		SubscriberID: p.SubscriberID,
+	}
+	return body
 }
 
 // NewPickupRequestBody builds the HTTP request body from the payload of the
 // "pickup" endpoint of the "books" service.
 func NewPickupRequestBody(p *books.PickupPayload) *PickupRequestBody {
 	body := &PickupRequestBody{
-		UserID: p.UserID,
+		SubscriberID: p.SubscriberID,
 	}
 	return body
 }
@@ -65,7 +84,8 @@ func NewPickupRequestBody(p *books.PickupPayload) *PickupRequestBody {
 // "return" endpoint of the "books" service.
 func NewReturnRequestBody(p *books.ReturnPayload) *ReturnRequestBody {
 	body := &ReturnRequestBody{
-		UserID: p.UserID,
+		BookID:       p.BookID,
+		SubscriberID: p.SubscriberID,
 	}
 	return body
 }
@@ -111,6 +131,9 @@ func ValidateBookResponseBody(body *BookResponseBody) (err error) {
 	}
 	if body.Images == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("images", "body"))
+	}
+	if body.Status == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("status", "body"))
 	}
 	return
 }

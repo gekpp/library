@@ -26,12 +26,13 @@ type LibraryBooksView struct {
 
 // BookView is a type that runs validations on a projected type.
 type BookView struct {
-	ID         *string
+	ID         *int64
 	Title      *string
 	Annotation *string
 	Author     *string
 	// images are a list of book photos
 	Images []string
+	Status *string
 }
 
 var (
@@ -81,6 +82,9 @@ func ValidateBookView(result *BookView) (err error) {
 	}
 	if result.Images == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("images", "result"))
+	}
+	if result.Status == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("status", "result"))
 	}
 	return
 }

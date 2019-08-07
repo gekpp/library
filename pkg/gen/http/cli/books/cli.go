@@ -57,6 +57,7 @@ func ParseEndpoint(
 		booksListFlags = flag.NewFlagSet("list", flag.ExitOnError)
 
 		booksReserveFlags      = flag.NewFlagSet("reserve", flag.ExitOnError)
+		booksReserveBodyFlag   = booksReserveFlags.String("body", "REQUIRED", "")
 		booksReserveBookIDFlag = booksReserveFlags.String("bookid", "REQUIRED", "id of the Book")
 		booksReserveTokenFlag  = booksReserveFlags.String("token", "REQUIRED", "")
 
@@ -65,10 +66,9 @@ func ParseEndpoint(
 		booksPickupBookIDFlag = booksPickupFlags.String("bookid", "REQUIRED", "id of the Book")
 		booksPickupTokenFlag  = booksPickupFlags.String("token", "REQUIRED", "")
 
-		booksReturnFlags      = flag.NewFlagSet("return", flag.ExitOnError)
-		booksReturnBodyFlag   = booksReturnFlags.String("body", "REQUIRED", "")
-		booksReturnBookIDFlag = booksReturnFlags.String("bookid", "REQUIRED", "id of the Book")
-		booksReturnTokenFlag  = booksReturnFlags.String("token", "REQUIRED", "")
+		booksReturnFlags     = flag.NewFlagSet("return", flag.ExitOnError)
+		booksReturnBodyFlag  = booksReturnFlags.String("body", "REQUIRED", "")
+		booksReturnTokenFlag = booksReturnFlags.String("token", "REQUIRED", "")
 
 		booksSubscribeFlags      = flag.NewFlagSet("subscribe", flag.ExitOnError)
 		booksSubscribeBookIDFlag = booksSubscribeFlags.String("bookid", "REQUIRED", "id of the Book")
@@ -179,13 +179,13 @@ func ParseEndpoint(
 				data = nil
 			case "reserve":
 				endpoint = c.Reserve()
-				data, err = booksc.BuildReservePayload(*booksReserveBookIDFlag, *booksReserveTokenFlag)
+				data, err = booksc.BuildReservePayload(*booksReserveBodyFlag, *booksReserveBookIDFlag, *booksReserveTokenFlag)
 			case "pickup":
 				endpoint = c.Pickup()
 				data, err = booksc.BuildPickupPayload(*booksPickupBodyFlag, *booksPickupBookIDFlag, *booksPickupTokenFlag)
 			case "return":
 				endpoint = c.Return()
-				data, err = booksc.BuildReturnPayload(*booksReturnBodyFlag, *booksReturnBookIDFlag, *booksReturnTokenFlag)
+				data, err = booksc.BuildReturnPayload(*booksReturnBodyFlag, *booksReturnTokenFlag)
 			case "subscribe":
 				endpoint = c.Subscribe()
 				data, err = booksc.BuildSubscribePayload(*booksSubscribeBookIDFlag, *booksSubscribeTokenFlag)
@@ -253,56 +253,59 @@ Example:
 }
 
 func booksReserveUsage() {
-	fmt.Fprintf(os.Stderr, `%s [flags] books reserve -bookid STRING -token STRING
+	fmt.Fprintf(os.Stderr, `%s [flags] books reserve -body JSON -bookid INT64 -token STRING
 
 Mark book as reserved. Once a book is reserved timer starts with timeout for the book to become picked up. Timeout is configurable. 
 			Once timeout is expired book becomes available
-    -bookid STRING: id of the Book
+    -body JSON: 
+    -bookid INT64: id of the Book
     -token STRING: 
 
 Example:
-    `+os.Args[0]+` books reserve --bookid "Velit et unde eveniet." --token "Aliquam laboriosam in molestiae repudiandae."
+    `+os.Args[0]+` books reserve --body '{
+      "subscriber_id": "Molestias est."
+   }' --bookid 3733984170189243710 --token "Occaecati sint molestias assumenda sed placeat."
 `, os.Args[0])
 }
 
 func booksPickupUsage() {
-	fmt.Fprintf(os.Stderr, `%s [flags] books pickup -body JSON -bookid STRING -token STRING
+	fmt.Fprintf(os.Stderr, `%s [flags] books pickup -body JSON -bookid INT64 -token STRING
 
 Mark book as picked up
     -body JSON: 
-    -bookid STRING: id of the Book
+    -bookid INT64: id of the Book
     -token STRING: 
 
 Example:
     `+os.Args[0]+` books pickup --body '{
-      "user_id": "Dolorum labore quas quidem sit fuga rerum."
-   }' --bookid "Vel qui totam incidunt aut possimus mollitia." --token "Ratione delectus quas temporibus possimus natus tempore."
+      "subscriber_id": "Et unde eveniet autem aliquam laboriosam."
+   }' --bookid 6061653207355838457 --token "Repudiandae nostrum et amet."
 `, os.Args[0])
 }
 
 func booksReturnUsage() {
-	fmt.Fprintf(os.Stderr, `%s [flags] books return -body JSON -bookid STRING -token STRING
+	fmt.Fprintf(os.Stderr, `%s [flags] books return -body JSON -token STRING
 
 Mark book as returned
     -body JSON: 
-    -bookid STRING: id of the Book
     -token STRING: 
 
 Example:
     `+os.Args[0]+` books return --body '{
-      "user_id": "Quo autem debitis exercitationem optio sed vitae."
-   }' --bookid "Amet distinctio reprehenderit." --token "Inventore porro assumenda recusandae corrupti quam."
+      "book_id": 5640400661650167868,
+      "subscriber_id": "Dolorum labore quas quidem sit fuga rerum."
+   }' --token "Vel qui totam incidunt aut possimus mollitia."
 `, os.Args[0])
 }
 
 func booksSubscribeUsage() {
-	fmt.Fprintf(os.Stderr, `%s [flags] books subscribe -bookid STRING -token STRING
+	fmt.Fprintf(os.Stderr, `%s [flags] books subscribe -bookid INT64 -token STRING
 
 Subscribe the caller on the next 'book's become available
-    -bookid STRING: id of the Book
+    -bookid INT64: id of the Book
     -token STRING: 
 
 Example:
-    `+os.Args[0]+` books subscribe --bookid "Consequatur quia consequatur et sed aut doloribus." --token "Accusantium quo."
+    `+os.Args[0]+` books subscribe --bookid 2021374031697615583 --token "Debitis exercitationem."
 `, os.Args[0])
 }

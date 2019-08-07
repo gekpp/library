@@ -2,6 +2,7 @@ package design
 
 import (
 	goa "goa.design/goa/v3/dsl"
+	cors "goa.design/plugins/v3/cors/dsl"
 )
 
 // JWTAuth defines a security scheme that uses JWT tokens.
@@ -16,6 +17,14 @@ var JWTAuth = goa.JWTSecurity("jwt", func() {
 
 var _ = goa.Service("books", func() {
 	goa.Description("The books service serves operations on books: list, reserve, pickedUp, returned, subscribe")
+
+	cors.Origin("/.*localhost.*/", func() {
+		cors.Headers("X-Shared-Secret")
+		cors.Methods("GET", "POST")
+		cors.Expose("X-Time", "X-Api-Version")
+		cors.MaxAge(100)
+		cors.Credentials()
+	})
 
 	goa.HTTP(func() {
 		goa.Path("/books")
@@ -41,11 +50,15 @@ var _ = goa.Service("books", func() {
 			goa.TokenField(0, "token", goa.String, func() {
 				goa.Description("JWT used for authentication")
 			})
-			goa.Field(1, "book_id", goa.String, func() {
+			goa.Field(1, "book_id", goa.Int64, func() {
 				goa.Description("id of the Book")
 			})
 
-			goa.Required("token", "book_id")
+			goa.Field(2, "subscriber_id", goa.String, func() {
+				goa.Description("id of a subscriber picking up the book")
+			})
+
+			goa.Required("token", "book_id", "subscriber_id")
 		})
 
 		goa.HTTP(func() {
@@ -64,14 +77,14 @@ var _ = goa.Service("books", func() {
 			goa.TokenField(0, "token", goa.String, func() {
 				goa.Description("JWT used for authentication")
 			})
-			goa.Field(1, "book_id", goa.String, func() {
+			goa.Field(1, "book_id", goa.Int64, func() {
 				goa.Description("id of the Book")
 			})
-			goa.Field(2, "user_id", goa.String, func() {
-				goa.Description("id of the user picking up the book")
+			goa.Field(2, "subscriber_id", goa.String, func() {
+				goa.Description("id of a subscriber picking up the book")
 			})
 
-			goa.Required("token", "book_id", "user_id")
+			goa.Required("token", "book_id", "subscriber_id")
 		})
 
 		goa.HTTP(func() {
@@ -91,18 +104,18 @@ var _ = goa.Service("books", func() {
 				goa.Description("JWT used for authentication")
 			})
 
-			goa.Field(1, "book_id", goa.String, func() {
+			goa.Field(1, "book_id", goa.Int64, func() {
 				goa.Description("id of the Book")
 			})
-			goa.Field(2, "user_id", goa.String, func() {
-				goa.Description("id of the user returning the book")
+			goa.Field(2, "subscriber_id", goa.String, func() {
+				goa.Description("id of a subscriber returning the book")
 			})
 
-			goa.Required("token", "book_id", "user_id")
+			goa.Required("token", "book_id", "subscriber_id")
 		})
 
 		goa.HTTP(func() {
-			goa.POST("/return/{book_id}")
+			goa.POST("/return")
 			goa.Response(goa.StatusOK)
 			goa.Response("invalid-scopes", goa.StatusForbidden)
 		})
@@ -118,7 +131,7 @@ var _ = goa.Service("books", func() {
 			goa.TokenField(0, "token", goa.String, func() {
 				goa.Description("JWT used for authentication")
 			})
-			goa.Field(1, "book_id", goa.String, func() {
+			goa.Field(1, "book_id", goa.Int64, func() {
 				goa.Description("id of the Book")
 			})
 

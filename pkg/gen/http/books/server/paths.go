@@ -17,21 +17,21 @@ func ListBooksPath() string {
 }
 
 // ReserveBooksPath returns the URL path to the books service reserve HTTP endpoint.
-func ReserveBooksPath(bookID string) string {
+func ReserveBooksPath(bookID int64) string {
 	return fmt.Sprintf("/books/reserve/%v", bookID)
 }
 
 // PickupBooksPath returns the URL path to the books service pickup HTTP endpoint.
-func PickupBooksPath(bookID string) string {
+func PickupBooksPath(bookID int64) string {
 	return fmt.Sprintf("/books/pickup/%v", bookID)
 }
 
 // ReturnBooksPath returns the URL path to the books service return HTTP endpoint.
-func ReturnBooksPath(bookID string) string {
-	return fmt.Sprintf("/books/return/%v", bookID)
+func ReturnBooksPath() string {
+	return "/books/return"
 }
 
 // SubscribeBooksPath returns the URL path to the books service subscribe HTTP endpoint.
-func SubscribeBooksPath(bookID string) string {
+func SubscribeBooksPath(bookID int64) string {
 	return fmt.Sprintf("/books/subscribe/%v", bookID)
 }

@@ -13,6 +13,7 @@ import (
 	books "library/gen/books"
 	booksviews "library/gen/books/views"
 	"net/http"
+	"strconv"
 	"strings"
 
 	goahttp "goa.design/goa/v3/http"
@@ -48,13 +49,35 @@ func EncodeReserveResponse(encoder func(context.Context, http.ResponseWriter) go
 func DecodeReserveRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.Decoder) func(*http.Request) (interface{}, error) {
 	return func(r *http.Request) (interface{}, error) {
 		var (
-			bookID string
+			body ReserveRequestBody
+			err  error
+		)
+		err = decoder(r).Decode(&body)
+		if err != nil {
+			if err == io.EOF {
+				return nil, goa.MissingPayloadError()
+			}
+			return nil, goa.DecodePayloadError(err.Error())
+		}
+		err = ValidateReserveRequestBody(&body)
+		if err != nil {
+			return nil, err
+		}
+
+		var (
+			bookID int64
 			token  string
-			err    error
 
 			params = mux.Vars(r)
 		)
-		bookID = params["book_id"]
+		{
+			bookIDRaw := params["book_id"]
+			v, err2 := strconv.ParseInt(bookIDRaw, 10, 64)
+			if err2 != nil {
+				err = goa.MergeErrors(err, goa.InvalidFieldTypeError("bookID", bookIDRaw, "integer"))
+			}
+			bookID = v
+		}
 		token = r.Header.Get("Authorization")
 		if token == "" {
 			err = goa.MergeErrors(err, goa.MissingFieldError("Authorization", "header"))
@@ -62,7 +85,7 @@ func DecodeReserveRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp
 		if err != nil {
 			return nil, err
 		}
-		payload := NewReservePayload(bookID, token)
+		payload := NewReservePayload(&body, bookID, token)
 		if strings.Contains(payload.Token, " ") {
 			// Remove authorization scheme prefix (e.g. "Bearer")
 			cred := strings.SplitN(payload.Token, " ", 2)[1]
@@ -106,12 +129,19 @@ func DecodePickupRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.
 		}
 
 		var (
-			bookID string
+			bookID int64
 			token  string
 
 			params = mux.Vars(r)
 		)
-		bookID = params["book_id"]
+		{
+			bookIDRaw := params["book_id"]
+			v, err2 := strconv.ParseInt(bookIDRaw, 10, 64)
+			if err2 != nil {
+				err = goa.MergeErrors(err, goa.InvalidFieldTypeError("bookID", bookIDRaw, "integer"))
+			}
+			bookID = v
+		}
 		token = r.Header.Get("Authorization")
 		if token == "" {
 			err = goa.MergeErrors(err, goa.MissingFieldError("Authorization", "header"))
@@ -163,12 +193,8 @@ func DecodeReturnRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.
 		}
 
 		var (
-			bookID string
-			token  string
-
-			params = mux.Vars(r)
+			token string
 		)
-		bookID = params["book_id"]
 		token = r.Header.Get("Authorization")
 		if token == "" {
 			err = goa.MergeErrors(err, goa.MissingFieldError("Authorization", "header"))
@@ -176,7 +202,7 @@ func DecodeReturnRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.
 		if err != nil {
 			return nil, err
 		}
-		payload := NewReturnPayload(&body, bookID, token)
+		payload := NewReturnPayload(&body, token)
 		if strings.Contains(payload.Token, " ") {
 			// Remove authorization scheme prefix (e.g. "Bearer")
 			cred := strings.SplitN(payload.Token, " ", 2)[1]
@@ -227,13 +253,20 @@ func EncodeSubscribeResponse(encoder func(context.Context, http.ResponseWriter) 
 func DecodeSubscribeRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.Decoder) func(*http.Request) (interface{}, error) {
 	return func(r *http.Request) (interface{}, error) {
 		var (
-			bookID string
+			bookID int64
 			token  string
 			err    error
 
 			params = mux.Vars(r)
 		)
-		bookID = params["book_id"]
+		{
+			bookIDRaw := params["book_id"]
+			v, err2 := strconv.ParseInt(bookIDRaw, 10, 64)
+			if err2 != nil {
+				err = goa.MergeErrors(err, goa.InvalidFieldTypeError("bookID", bookIDRaw, "integer"))
+			}
+			bookID = v
+		}
 		token = r.Header.Get("Authorization")
 		if token == "" {
 			err = goa.MergeErrors(err, goa.MissingFieldError("Authorization", "header"))
@@ -283,6 +316,7 @@ func marshalBooksviewsBookViewToBookResponseBody(v *booksviews.BookView) *BookRe
 		Title:      *v.Title,
 		Annotation: *v.Annotation,
 		Author:     *v.Author,
+		Status:     *v.Status,
 	}
 	if v.Images != nil {
 		res.Images = make([]string, len(v.Images))

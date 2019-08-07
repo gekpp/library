@@ -11,24 +11,37 @@ import (
 	"encoding/json"
 	"fmt"
 	books "library/gen/books"
+	"strconv"
 )
 
 // BuildReservePayload builds the payload for the books reserve endpoint from
 // CLI flags.
-func BuildReservePayload(booksReserveBookID string, booksReserveToken string) (*books.ReservePayload, error) {
-	var bookID string
+func BuildReservePayload(booksReserveBody string, booksReserveBookID string, booksReserveToken string) (*books.ReservePayload, error) {
+	var err error
+	var body ReserveRequestBody
 	{
-		bookID = booksReserveBookID
+		err = json.Unmarshal([]byte(booksReserveBody), &body)
+		if err != nil {
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"subscriber_id\": \"Molestias est.\"\n   }'")
+		}
+	}
+	var bookID int64
+	{
+		bookID, err = strconv.ParseInt(booksReserveBookID, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid value for bookID, must be INT64")
+		}
 	}
 	var token string
 	{
 		token = booksReserveToken
 	}
-	payload := &books.ReservePayload{
-		BookID: bookID,
-		Token:  token,
+	v := &books.ReservePayload{
+		SubscriberID: body.SubscriberID,
 	}
-	return payload, nil
+	v.BookID = bookID
+	v.Token = token
+	return v, nil
 }
 
 // BuildPickupPayload builds the payload for the books pickup endpoint from CLI
@@ -39,19 +52,22 @@ func BuildPickupPayload(booksPickupBody string, booksPickupBookID string, booksP
 	{
 		err = json.Unmarshal([]byte(booksPickupBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"user_id\": \"Dolorum labore quas quidem sit fuga rerum.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"subscriber_id\": \"Et unde eveniet autem aliquam laboriosam.\"\n   }'")
 		}
 	}
-	var bookID string
+	var bookID int64
 	{
-		bookID = booksPickupBookID
+		bookID, err = strconv.ParseInt(booksPickupBookID, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid value for bookID, must be INT64")
+		}
 	}
 	var token string
 	{
 		token = booksPickupToken
 	}
 	v := &books.PickupPayload{
-		UserID: body.UserID,
+		SubscriberID: body.SubscriberID,
 	}
 	v.BookID = bookID
 	v.Token = token
@@ -60,27 +76,23 @@ func BuildPickupPayload(booksPickupBody string, booksPickupBookID string, booksP
 
 // BuildReturnPayload builds the payload for the books return endpoint from CLI
 // flags.
-func BuildReturnPayload(booksReturnBody string, booksReturnBookID string, booksReturnToken string) (*books.ReturnPayload, error) {
+func BuildReturnPayload(booksReturnBody string, booksReturnToken string) (*books.ReturnPayload, error) {
 	var err error
 	var body ReturnRequestBody
 	{
 		err = json.Unmarshal([]byte(booksReturnBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"user_id\": \"Quo autem debitis exercitationem optio sed vitae.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"book_id\": 5640400661650167868,\n      \"subscriber_id\": \"Dolorum labore quas quidem sit fuga rerum.\"\n   }'")
 		}
-	}
-	var bookID string
-	{
-		bookID = booksReturnBookID
 	}
 	var token string
 	{
 		token = booksReturnToken
 	}
 	v := &books.ReturnPayload{
-		UserID: body.UserID,
+		BookID:       body.BookID,
+		SubscriberID: body.SubscriberID,
 	}
-	v.BookID = bookID
 	v.Token = token
 	return v, nil
 }
@@ -88,9 +100,13 @@ func BuildReturnPayload(booksReturnBody string, booksReturnBookID string, booksR
 // BuildSubscribePayload builds the payload for the books subscribe endpoint
 // from CLI flags.
 func BuildSubscribePayload(booksSubscribeBookID string, booksSubscribeToken string) (*books.SubscribePayload, error) {
-	var bookID string
+	var err error
+	var bookID int64
 	{
-		bookID = booksSubscribeBookID
+		bookID, err = strconv.ParseInt(booksSubscribeBookID, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid value for bookID, must be INT64")
+		}
 	}
 	var token string
 	{

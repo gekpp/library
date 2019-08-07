@@ -18,15 +18,16 @@ var _ = goa.API("books", func() {
 var Book = goa.Type("Book", func() {
 	goa.Description("Book is a book")
 
-	goa.Attribute("id", goa.String)
+	goa.Attribute("id", goa.Int64)
 	goa.Attribute("title", goa.String)
 	goa.Attribute("annotation", goa.String)
 	goa.Attribute("author", goa.String)
 	goa.Attribute("images", goa.ArrayOf(goa.String), func() {
 		goa.Description("images are a list of book photos")
 	})
+	goa.Attribute("status", goa.String)
 
-	goa.Required("id", "title", "annotation", "author", "images")
+	goa.Required("id", "title", "annotation", "author", "images", "status")
 })
 
 // ListOfBooks is a List of books

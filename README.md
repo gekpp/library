@@ -30,4 +30,6 @@ bin/books-cli auther signin -username librarian -password library
 
 ```bash
 bin/books-cli books reserve -bookid abc-der -token $TOKEN
+bin/books-cli books reserve -bookid 2 -token $TOKEN
+bin/books-cli books return -body '{"subscriber_id":"8aa73d8b-6fa3-43c4-aab0-d0df8b035556", "book_id":2}'  -token $TOKEN
 ```

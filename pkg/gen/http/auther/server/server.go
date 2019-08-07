@@ -20,6 +20,7 @@ import (
 type Server struct {
 	Mounts []*MountPoint
 	Signin http.Handler
+	CORS   http.Handler
 }
 
 // ErrorNamer is an interface implemented by generated error structs that
@@ -50,8 +51,10 @@ func New(
 	return &Server{
 		Mounts: []*MountPoint{
 			{"Signin", "POST", "/signin"},
+			{"CORS", "OPTIONS", "/signin"},
 		},
 		Signin: NewSigninHandler(e.Signin, mux, dec, enc, eh),
+		CORS:   NewCORSHandler(),
 	}
 }
 
@@ -61,17 +64,19 @@ func (s *Server) Service() string { return "auther" }
 // Use wraps the server handlers with the given middleware.
 func (s *Server) Use(m func(http.Handler) http.Handler) {
 	s.Signin = m(s.Signin)
+	s.CORS = m(s.CORS)
 }
 
 // Mount configures the mux to serve the auther endpoints.
 func Mount(mux goahttp.Muxer, h *Server) {
 	MountSigninHandler(mux, h.Signin)
+	MountCORSHandler(mux, h.CORS)
 }
 
 // MountSigninHandler configures the mux to serve the "auther" service "signin"
 // endpoint.
 func MountSigninHandler(mux goahttp.Muxer, h http.Handler) {
-	f, ok := h.(http.HandlerFunc)
+	f, ok := handleAutherOrigin(h).(http.HandlerFunc)
 	if !ok {
 		f = func(w http.ResponseWriter, r *http.Request) {
 			h.ServeHTTP(w, r)
@@ -117,5 +122,41 @@ func NewSigninHandler(
 		if err := encodeResponse(ctx, w, res); err != nil {
 			eh(ctx, w, err)
 		}
+	})
+}
+
+// MountCORSHandler configures the mux to serve the CORS endpoints for the
+// service auther.
+func MountCORSHandler(mux goahttp.Muxer, h http.Handler) {
+	h = handleAutherOrigin(h)
+	f, ok := h.(http.HandlerFunc)
+	if !ok {
+		f = func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		}
+	}
+	mux.Handle("OPTIONS", "/signin", f)
+}
+
+// NewCORSHandler creates a HTTP handler which returns a simple 200 response.
+func NewCORSHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+	})
+}
+
+// handleAutherOrigin applies the CORS response headers corresponding to the
+// origin for the service auther.
+func handleAutherOrigin(h http.Handler) http.Handler {
+	origHndlr := h.(http.HandlerFunc)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+		if origin == "" {
+			// Not a CORS request
+			origHndlr(w, r)
+			return
+		}
+		origHndlr(w, r)
+		return
 	})
 }

@@ -14,18 +14,27 @@ import (
 	goa "goa.design/goa/v3/pkg"
 )
 
+// ReserveRequestBody is the type of the "books" service "reserve" endpoint
+// HTTP request body.
+type ReserveRequestBody struct {
+	// id of a subscriber picking up the book
+	SubscriberID *string `form:"subscriber_id,omitempty" json:"subscriber_id,omitempty" xml:"subscriber_id,omitempty"`
+}
+
 // PickupRequestBody is the type of the "books" service "pickup" endpoint HTTP
 // request body.
 type PickupRequestBody struct {
-	// id of the user picking up the book
-	UserID *string `form:"user_id,omitempty" json:"user_id,omitempty" xml:"user_id,omitempty"`
+	// id of a subscriber picking up the book
+	SubscriberID *string `form:"subscriber_id,omitempty" json:"subscriber_id,omitempty" xml:"subscriber_id,omitempty"`
 }
 
 // ReturnRequestBody is the type of the "books" service "return" endpoint HTTP
 // request body.
 type ReturnRequestBody struct {
-	// id of the user returning the book
-	UserID *string `form:"user_id,omitempty" json:"user_id,omitempty" xml:"user_id,omitempty"`
+	// id of the Book
+	BookID *int64 `form:"book_id,omitempty" json:"book_id,omitempty" xml:"book_id,omitempty"`
+	// id of a subscriber returning the book
+	SubscriberID *string `form:"subscriber_id,omitempty" json:"subscriber_id,omitempty" xml:"subscriber_id,omitempty"`
 }
 
 // ListResponseBody is the type of the "books" service "list" endpoint HTTP
@@ -44,12 +53,13 @@ type SubscribeInvalidScopesResponseBody string
 
 // BookResponseBody is used to define fields on response body types.
 type BookResponseBody struct {
-	ID         string `form:"id" json:"id" xml:"id"`
+	ID         int64  `form:"id" json:"id" xml:"id"`
 	Title      string `form:"title" json:"title" xml:"title"`
 	Annotation string `form:"annotation" json:"annotation" xml:"annotation"`
 	Author     string `form:"author" json:"author" xml:"author"`
 	// images are a list of book photos
 	Images []string `form:"images" json:"images" xml:"images"`
+	Status string   `form:"status" json:"status" xml:"status"`
 }
 
 // NewListResponseBody builds the HTTP response body from the result of the
@@ -80,17 +90,19 @@ func NewSubscribeInvalidScopesResponseBody(res books.InvalidScopes) SubscribeInv
 }
 
 // NewReservePayload builds a books service reserve endpoint payload.
-func NewReservePayload(bookID string, token string) *books.ReservePayload {
-	return &books.ReservePayload{
-		BookID: bookID,
-		Token:  token,
+func NewReservePayload(body *ReserveRequestBody, bookID int64, token string) *books.ReservePayload {
+	v := &books.ReservePayload{
+		SubscriberID: *body.SubscriberID,
 	}
+	v.BookID = bookID
+	v.Token = token
+	return v
 }
 
 // NewPickupPayload builds a books service pickup endpoint payload.
-func NewPickupPayload(body *PickupRequestBody, bookID string, token string) *books.PickupPayload {
+func NewPickupPayload(body *PickupRequestBody, bookID int64, token string) *books.PickupPayload {
 	v := &books.PickupPayload{
-		UserID: *body.UserID,
+		SubscriberID: *body.SubscriberID,
 	}
 	v.BookID = bookID
 	v.Token = token
@@ -98,35 +110,46 @@ func NewPickupPayload(body *PickupRequestBody, bookID string, token string) *boo
 }
 
 // NewReturnPayload builds a books service return endpoint payload.
-func NewReturnPayload(body *ReturnRequestBody, bookID string, token string) *books.ReturnPayload {
+func NewReturnPayload(body *ReturnRequestBody, token string) *books.ReturnPayload {
 	v := &books.ReturnPayload{
-		UserID: *body.UserID,
+		BookID:       *body.BookID,
+		SubscriberID: *body.SubscriberID,
 	}
-	v.BookID = bookID
 	v.Token = token
 	return v
 }
 
 // NewSubscribePayload builds a books service subscribe endpoint payload.
-func NewSubscribePayload(bookID string, token string) *books.SubscribePayload {
+func NewSubscribePayload(bookID int64, token string) *books.SubscribePayload {
 	return &books.SubscribePayload{
 		BookID: bookID,
 		Token:  token,
 	}
 }
 
+// ValidateReserveRequestBody runs the validations defined on ReserveRequestBody
+func ValidateReserveRequestBody(body *ReserveRequestBody) (err error) {
+	if body.SubscriberID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("subscriber_id", "body"))
+	}
+	return
+}
+
 // ValidatePickupRequestBody runs the validations defined on PickupRequestBody
 func ValidatePickupRequestBody(body *PickupRequestBody) (err error) {
-	if body.UserID == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("user_id", "body"))
+	if body.SubscriberID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("subscriber_id", "body"))
 	}
 	return
 }
 
 // ValidateReturnRequestBody runs the validations defined on ReturnRequestBody
 func ValidateReturnRequestBody(body *ReturnRequestBody) (err error) {
-	if body.UserID == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("user_id", "body"))
+	if body.BookID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("book_id", "body"))
+	}
+	if body.SubscriberID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("subscriber_id", "body"))
 	}
 	return
 }

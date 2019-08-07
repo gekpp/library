@@ -13,6 +13,10 @@ import (
 	"os/signal"
 	"strings"
 	"sync"
+
+	"github.com/jmoiron/sqlx"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -24,6 +28,12 @@ func main() {
 		httpPortF = flag.String("http-port", "", "HTTP port (overrides host HTTP port specified in service design)")
 		secureF   = flag.Bool("secure", false, "Use secure scheme (https or grpcs)")
 		dbgF      = flag.Bool("debug", false, "Log request and response bodies")
+
+		dbhost     = flag.String("dbhost", "localhost", "Database host")
+		dbport     = flag.Int("dbport", 5432, "Database port")
+		dbuser     = flag.String("dbuser", "postgres", "Database username")
+		dbpassword = flag.String("dbpassword", "postgres", "Database password")
+		dbname     = flag.String("dbname", "postgres", "Database name")
 	)
 	flag.Parse()
 
@@ -35,13 +45,35 @@ func main() {
 		logger = log.New(os.Stderr, "[booksapi] ", log.Ltime)
 	}
 
+	// Setup db connection
+	var (
+		booksRepo booksapi.BooksRepo
+	)
+	{
+		psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+			*dbhost, *dbport, *dbuser, *dbpassword, *dbname)
+		db, err := sqlx.Open("postgres", psqlInfo)
+
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "could not open database %v: %s", psqlInfo, err)
+			os.Exit(1)
+		}
+
+		if err := db.Ping(); err != nil {
+			fmt.Fprintf(os.Stderr, "could not ping database %v: %s", psqlInfo, err)
+			os.Exit(1)
+		}
+
+		booksRepo = booksapi.NewDbBooksRepo(db)
+	}
+
 	// Initialize the services.
 	var (
 		booksSvc  books.Service
 		autherSvc auther.Service
 	)
 	{
-		booksSvc = booksapi.NewBooks(logger)
+		booksSvc = booksapi.NewBooks(logger, booksRepo)
 		autherSvc = booksapi.NewAuther(logger)
 	}
 

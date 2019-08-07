@@ -5,6 +5,8 @@ import (
 	"library/gen/auther"
 	books "library/gen/books"
 
+	"github.com/google/uuid"
+
 	"github.com/dgrijalva/jwt-go"
 	"goa.design/goa/v3/security"
 )
@@ -23,12 +25,15 @@ var (
 
 	// Key is the key used in JWT authentication
 	Key = []byte("secret")
+
+	// HardcodedUserID is the one-for-all (very unsecure!!!) ID of the service caller if applicable.
+	HardcodedUserID, _ = uuid.NewRandom()
 )
 
 type contextKey string
 
 var (
-	contextKeyUsername = contextKey("username")
+	contextKeyUserID = contextKey("username")
 )
 
 // BasicAuth implements the authorization logic for service "auther" for the
@@ -68,5 +73,11 @@ func (s *bookssrvc) JWTAuth(ctx context.Context, token string, scheme *security.
 	if err := scheme.Validate(scopesInToken); err != nil {
 		return ctx, books.InvalidScopes(err.Error())
 	}
-	return context.WithValue(ctx, contextKeyUsername, claims["sub"]), nil
+
+	userID, err := uuid.Parse(claims["sub"].(string))
+	if err != nil {
+		return ctx, books.InvalidScopes("Unparsable userID")
+	}
+
+	return context.WithValue(ctx, contextKeyUserID, userID), nil
 }
